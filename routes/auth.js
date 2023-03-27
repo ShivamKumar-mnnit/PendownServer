@@ -29,7 +29,7 @@ if(user){
     return res.status(400).json({error : 'Sorry a user with this email exist '})
 }
 
-const salt = await bcrypt.genSalt(process.env.SALT);
+const salt = await bcrypt.genSalt(10);
 secPass= await bcrypt.hash(req.body.password,salt);
 
 //create a new user
