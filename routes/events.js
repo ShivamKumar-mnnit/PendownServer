@@ -5,13 +5,23 @@ const Event = require('../models/Events');
 const { body, validationResult } = require('express-validator');
 
 
-//Route1 : get all the events using : GET "/api/events/fetchallevents"  login required
+//Route1.1 : get all the events of one user using : GET "/api/events/fetchallevents"  login required
 router.get('/fetchallevents', fetchuser, async (req, res) => {
     try {
         const events = await Event.find({ user: req.user.id })
         res.json(events);
     } catch (error) {
-        console.error(error.message);
+        res.status(500).send("Internal Server Error");
+    }
+})
+
+
+//Route1.2 : get all the events  using : GET "/api/events/displayallevents"  login required
+router.get('/displayallevents', fetchuser, async (req, res) => {
+    try {
+        const events = await Event.find()
+        res.json(events);
+    } catch (error) {
         res.status(500).send("Internal Server Error");
     }
 })
@@ -44,7 +54,6 @@ router.post('/addevent', fetchuser, [
 
         res.json({ savedEvent });
     } catch (error) {
-        console.log(error.message);
         res.status(500).send("Internal Server Error");
     }
 
@@ -71,7 +80,6 @@ router.put('/updateevent/:id', fetchuser, async (req, res) => {
         event = await Event.findByIdAndUpdate(req.params.id, { $set: newEvent }, { new: true })
         res.json({ event });
     } catch (error) {
-        console.log(error.message);
         res.status(500).send("Internal Server Error");
     }
 
@@ -92,7 +100,6 @@ router.delete('/deleteevent/:id', fetchuser, async (req, res) => {
         event = await Event.findByIdAndDelete(req.params.id)
         res.json({ "Success": "Event has been deleted", event: event });
     } catch (error) {
-        console.log(error.message);
         res.status(500).send("Internal Server Error");
     }
 })

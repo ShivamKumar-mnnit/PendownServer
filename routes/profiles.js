@@ -11,7 +11,16 @@ router.get('/fetchprofile', fetchuser, async (req, res) => {
         const profiles = await Profile.find({ user: req.user.id })
         res.json(profiles);
     } catch (error) {
-        console.error(error.message);
+        res.status(500).send("Internal Server Error");
+    }
+})
+
+//Route1.2 : get all the profiles  using : GET "/api/events/displayallprofiles"  login required
+router.get('/displayallprofiles', fetchuser, async (req, res) => {
+    try {
+        const profiles = await Profile.find()
+        res.json(profiles);
+    } catch (error) {
         res.status(500).send("Internal Server Error");
     }
 })
@@ -53,7 +62,6 @@ router.post('/addprofile', fetchuser, [
 
         res.json({ savedProfile });
     } catch (error) {
-        console.log(error.message);
         res.status(500).send("Internal Server Error");
     }
 
@@ -90,14 +98,13 @@ router.put('/updateprofile/:id', fetchuser, async (req, res) => {
         profile = await Profile.findByIdAndUpdate(req.params.id, { $set: newProfile }, { new: true })
         res.json({ profile });
     } catch (error) {
-        console.log(error.message);
         res.status(500).send("Internal Server Error");
     }
 
 })
 
 
-//Route4 : Delete an existing profile using : DELETE "/api/notes/deleteprofile"  login required
+//Route4 : Delete an existing profile using : DELETE "/api/profiles/deleteprofile"  login required
 router.delete('/deleteprofile/:id', fetchuser, async (req, res) => {
     try {
         //find the profile to be deleted and delete it 
@@ -111,10 +118,60 @@ router.delete('/deleteprofile/:id', fetchuser, async (req, res) => {
         profile = await Profile.findByIdAndDelete(req.params.id)
         res.json({ "Success": "Profile has been deleted", profile: profile });
     } catch (error) {
-        console.log(error.message);
         res.status(500).send("Internal Server Error");
     }
 })
+
+// Route5: Like a profile using PUT "/api/profiles/like/:id" (login required)
+router.put('/like/:id', fetchuser, async (req, res) => {
+    try {
+      const profile = await Profile.findById(req.params.id);
+  
+      if (!profile) {
+        return res.status(404).json({ message: 'Profile not found' });
+      }
+  
+      if (profile.likes.some(like => like.user.toString() === req.user.id)) {
+        return res.status(400).json({ message: 'Profile already liked' });
+      }
+      if (profile && profile.likes) {
+        profile.likes.unshift({ user: req.user.id });
+      }
+  
+      await profile.save();
+  
+      res.json(profile.likes);
+    } catch (error) {
+      res.status(500).json({ message: 'Server Error' });
+    }
+  });
+  
+  // Route6: Unlike a profile using PUT "/api/profiles/unlike/:id" (login required)
+router.put('/unlike/:id', fetchuser, async (req, res) => {
+    try {
+      const profile = await Profile.findById(req.params.id);
+  
+      if (!profile) {
+        return res.status(404).json({ message: 'Profile not found' });
+      }
+  
+      if (!profile.likes.some(like => like.user.toString() === req.user.id)) {
+        return res.status(400).json({ message: 'Profile not liked' });
+      }
+  
+      profile.likes = profile.likes.filter(
+        like => like.user.toString() !== req.user.id
+      );
+  
+      await profile.save();
+  
+      res.json(profile.likes);
+    } catch (error) {
+      res.status(500).json({ message: 'Server Error' });
+    }
+  });
+  
+
 
 
 
